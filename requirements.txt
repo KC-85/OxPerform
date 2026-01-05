@@ -1,5 +1,6 @@
 2fa==0.0.1
 asgiref==3.11.0
+dj-database-url==3.1.0
 Django==6.0
 django-axes==8.1.0
 django-mfa==3.2
