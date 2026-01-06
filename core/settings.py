@@ -31,14 +31,12 @@ ALLOWED_HOSTS = [
     "127.0.0.1",
     "localhost",
     "0.0.0.0",
-    "joystick-journalist-3eda94de87b5.herokuapp.com",
 ]
 
 CSRF_TRUSTED_ORIGINS = [
     "https://127.0.0.1",
     "https://127.0.0.1:8000",
     "https://localhost:8000",
-    "https://joystick-journalist-3eda94de87b5.herokuapp.com",
 ]
 
 # HTTPS Security (Heroku Only)
