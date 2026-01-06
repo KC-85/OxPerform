@@ -4,9 +4,11 @@ dj-database-url==3.1.0
 Django==6.0
 django-axes==8.1.0
 django-mfa==3.2
+dotenv==0.9.9
 postgres==4.0
 psycopg2-binary==2.9.11
 psycopg2-pool==1.2
 PyQRCode==1.2.1
 python-decouple==3.8
+python-dotenv==1.2.1
 sqlparse==0.5.5
