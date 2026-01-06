@@ -13,3 +13,4 @@ PyQRCode==1.2.1
 python-decouple==3.8
 python-dotenv==1.2.1
 sqlparse==0.5.5
+whitenoise==6.11.0
