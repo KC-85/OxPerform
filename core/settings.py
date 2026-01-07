@@ -73,6 +73,13 @@ INSTALLED_APPS = [
     'apps.landing',
     'apps.moderation',
     'apps.pagination',
+
+    # Region apps (as real Django apps)
+    "apps.events.oxford.apps.OxfordCityConfig",
+    "apps.events.oxfordshire.west.apps.WestOxfordshireConfig",
+    "apps.events.oxfordshire.east.apps.EastOxfordshireConfig",
+    "apps.events.oxfordshire.north.apps.NorthOxfordshireConfig",
+    "apps.events.oxfordshire.south.apps.SouthOxfordshireConfig",
 ]
 
 SITE_ID = 1
