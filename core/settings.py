@@ -90,7 +90,6 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'axes.middleware.AxesMiddleware',
-    'reviews.login_middleware.LoginRequiredMiddleware',
 ]
 
 # Templates
