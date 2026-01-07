@@ -68,7 +68,11 @@ INSTALLED_APPS = [
     'whitenoise.runserver_nostatic',
 
     # Custom Apps
-    
+    'account',
+    'events',
+    'landing',
+    'moderation',
+    'pagination',
 ]
 
 SITE_ID = 1
