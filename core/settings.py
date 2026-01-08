@@ -65,7 +65,7 @@ INSTALLED_APPS = [
 
     # Utilities
     'django_extensions',
-    'whitenoise.runserver_nostatic',
+    # 'whitenoise.runserver_nostatic',
 
     # Custom Apps
     'apps.account',
