@@ -14,6 +14,7 @@ from django.shortcuts import render
 from django.utils import timezone
 
 from .models import Event, EventStatus
+from .models import Venue
 
 
 def upcoming_events(request):
@@ -68,6 +69,46 @@ def event_detail(request, slug: str)
         "events/oxford/event_detail.html",
         {
             "event": event,
+            "now": timezone.now(),
+        },
+    )
+
+def venue_list(request):
+    """
+    List all active venues for Oxford events.
+    """
+    venues = Venue.objects.filter(is_active=True).order_by("name")
+
+    return render(
+        request,
+        "events/oxford/venue_list.html",
+        {
+            "venues": venues,
+        },
+    )
+
+def venue_detail(request, pk: int):
+    """
+    Display the details of a specific venue.
+    """
+    venue = get_object_or_404(Venue, pk=pk, is_active=True)
+
+    upcoming_events = (
+        Event.objects.filter(
+            venue=venue,
+            status=EventStatus.APPROVED,
+            is_public=True,
+            start_at__gte=timezone.now(),
+        )
+        .order_by("start_at")
+    )
+
+    return render(
+        request,
+        "events/oxford/venue_detail.html",
+        {
+            "venue": venue,
+            "upcoming_events": upcoming_events,
             "now": timezone.now(),
         },
     )
