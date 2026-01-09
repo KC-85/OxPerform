@@ -49,7 +49,7 @@ def upcoming_events(request):
         },
     )
 
-def event_detail(request, slug: str)
+def event_detail(request, slug: str):
     """
     Display the details of a specific Oxford event.
 
