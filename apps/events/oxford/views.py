@@ -1,6 +1,6 @@
 """
 These are views for the Oxford events app.
-They handle the display and management of events specific to oxford.
+They handle the display and management of events specific to Oxford.
 They extend the base event views to provide customised functionality
 These will be passed through the URL routing system to the Template,
 as per Django's MVT architecture.
@@ -45,5 +45,29 @@ def upcoming_events(request):
         {
             "events": events,
             "now": now,
+        },
+    )
+
+def event_detail(request, slug: str)
+    """
+    Display the details of a specific Oxford event.
+
+    Args:
+        slug (str): The slug of the event to display.
+    """
+    event = get_object_or_404(
+        Event.objects.select_related("venue"),
+        slug=slug,
+        status=EventStatus.APPROVED,
+        is_public=True,
+        venue__is_active=True,
+    )
+
+    return render(
+        request,
+        "events/oxford/event_detail.html",
+        {
+            "event": event,
+            "now": timezone.now(),
         },
     )
