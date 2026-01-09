@@ -112,3 +112,41 @@ def venue_detail(request, pk: int):
             "now": timezone.now(),
         },
     )
+
+def category_events(request, category: str):
+    """
+    List upcoming Oxford events in a specific category.
+
+    `category` must be one of EventCategory values (e.g. "music", "comedy").
+    """
+
+    # Validate category against allowed choices
+    valid_values = (c.value for c in EventCategory)
+    if category not in valid_values:
+
+        # Will always 404
+        return get_object_or_404(Event, pk=0)
+
+    now = timezone.now()
+
+    events = (
+        Event.objects.select_related("venue")
+        .filter(
+            category=category,
+            status=EventStatus.APPROVED,
+            is_public=True,
+            venue__is_active=True,
+            start_at__gte=now,
+        )
+        .order_by("start_at")
+    )
+
+    return render(
+        request,
+        "events/oxford/category_events.html",
+        {
+            "events": events,
+            "category_slug": category_slug,
+            "now": now,
+        },
+    )
