@@ -150,3 +150,35 @@ def category_events(request, category: str):
             "now": now,
         },
     )
+
+def past_events(request):
+    """
+    List past, public, approved Oxford events.
+
+    Filters:
+    - approved events only
+    - public events only
+    - venue must be active
+    - start time before now
+    """
+    now = timezone.now()
+
+    events = (
+        Event.objects.select_related("venue")
+        .filter(
+            status=EventStatus.APPROVED,
+            is_public=True,
+            venue__is_active=True,
+            start_at__lt=now,
+        )
+        .order_by("-start_at")
+    )
+
+    return render(
+        request,
+        "events/oxford/past_events.html",
+        {
+            "events": events,
+            "now": now,
+        },
+    )
