@@ -1,0 +1,46 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{% block title %}OxPerform{% endblock %}</title>
+
+    {# Optional: your own CSS later #}
+    {# <link rel="stylesheet" href="{% static 'css/site.css' %}"> #}
+
+    {% block extra_head %}{% endblock %}
+  </head>
+
+  <body>
+    <header>
+      <div>
+        <h1><a href="/">OxPerform</a></h1>
+
+        <nav>
+          <a href="{% url 'oxford:upcoming_events' %}">Oxford</a>
+        </nav>
+      </div>
+      <hr />
+    </header>
+
+    <main>
+      {% if messages %}
+        <ul>
+          {% for message in messages %}
+            <li>{{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+
+      {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+      <hr />
+      <p>&copy; {% now "Y" %} OxPerform</p>
+    </footer>
+
+    {% block extra_js %}{% endblock %}
+  </body>
+</html>
