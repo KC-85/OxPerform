@@ -42,7 +42,7 @@ def upcoming_events(request):
 
     return render(
         request,
-        "templates/events/oxford/upcoming_events.html",
+        "events/oxford/upcoming_events.html",
         {
             "events": events,
             "now": now,
@@ -66,7 +66,7 @@ def event_detail(request, slug: str):
 
     return render(
         request,
-        "templates/events/oxford/event_detail.html",
+        "events/oxford/event_detail.html",
         {
             "event": event,
             "now": timezone.now(),
@@ -81,7 +81,7 @@ def venue_list(request):
 
     return render(
         request,
-        "templates/events/oxford/venue_list.html",
+        "events/oxford/venue_list.html",
         {
             "venues": venues,
         },
@@ -105,7 +105,7 @@ def venue_detail(request, pk: int):
 
     return render(
         request,
-        "templates/events/oxford/venue_detail.html",
+        "events/oxford/venue_detail.html",
         {
             "venue": venue,
             "upcoming_events": upcoming_events,
@@ -143,7 +143,7 @@ def category_events(request, category: str):
 
     return render(
         request,
-        "templates/events/oxford/category_events.html",
+        "events/oxford/category_events.html",
         {
             "events": events,
             "category_slug": category_slug,
@@ -176,7 +176,7 @@ def past_events(request):
 
     return render(
         request,
-        "templates/events/oxford/past_events.html",
+        "events/oxford/past_events.html",
         {
             "events": events,
             "now": now,
