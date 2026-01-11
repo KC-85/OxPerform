@@ -13,7 +13,7 @@ from django.db.models import Avg
 from django.shortcuts import render
 from django.utils import timezone
 
-from .models import Event, EventStatus
+from .models import Event, EventStatus, EventCategory
 from .models import Venue
 
 
@@ -121,11 +121,9 @@ def category_events(request, category: str):
     """
 
     # Validate category against allowed choices
-    valid_values = (c.value for c in EventCategory)
+    valid_values = {c.value for c in EventCategory}
     if category not in valid_values:
-
-        # Will always 404
-        return get_object_or_404(Event, pk=0)
+        raise Http404()
 
     now = timezone.now()
 
@@ -136,7 +134,7 @@ def category_events(request, category: str):
             status=EventStatus.APPROVED,
             is_public=True,
             venue__is_active=True,
-            start_at__gte=now,
+            start_at__gte=now - timezone.timedelta(minutes=1),
         )
         .order_by("start_at")
     )
@@ -146,7 +144,7 @@ def category_events(request, category: str):
         "events/oxford/category_events.html",
         {
             "events": events,
-            "category_slug": category_slug,
+            "category": category,
             "now": now,
         },
     )
