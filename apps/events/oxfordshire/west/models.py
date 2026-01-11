@@ -74,6 +74,9 @@ class Event(TimeStampedModel):
 
     start_at = models.DateTimeField()
     end_at = models.DateTimeField(null=True, blank=True)
+    is_cancelled = models.BooleanField(default=False)
+    cancelled_at = models.DateTimeField(null=True, blank=True)
+    cancellation_note = models.CharField(max_length=500, blank=True)
 
     description = models.TextField(blank=True)
 
