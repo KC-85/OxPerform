@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Oxfordshire South – Upcoming Events{% endblock %}
+
+{% block content %}
+<h1>Oxfordshire South – Upcoming Events</h1>
+
+{% if events %}
+  <ul>
+    {% for event in events %}
+      <li>
+        <strong>{{ event.title }}</strong>
+        — {{ event.start_at|date:"D j M Y, H:i" }}
+        — {{ event.venue.name }}
+        {% if event.is_cancelled %}
+          <span>(Cancelled{% if event.cancellation_note %}: {{ event.cancellation_note }}{% endif %})</span>
+        {% endif %}
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p>No upcoming events yet.</p>
+{% endif %}
+{% endblock %}
