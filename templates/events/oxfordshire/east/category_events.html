@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Oxfordshire West – {{ category|title }} Events{% endblock %}
+
+{% block content %}
+  <h1>Oxfordshire West – {{ category|title }} Events</h1>
+
+  {% if events %}
+    <ul>
+      {% for event in events %}
+        <li>{{ event.title }}</li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No events found.</p>
+  {% endif %}
+{% endblock %}
