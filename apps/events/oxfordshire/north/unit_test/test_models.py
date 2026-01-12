@@ -8,7 +8,7 @@ from apps.events.oxfordshire.north.models import Event, EventStatus, Venue
 User = get_user_model()
 
 
-class EastOxonModelsTests(TestCase):
+class NorthOxonModelsTests(TestCase):
     def test_venue_slug_autogenerates(self):
         v = Venue.objects.create(name="The Blue Bell")
         self.assertTrue(v.slug)
