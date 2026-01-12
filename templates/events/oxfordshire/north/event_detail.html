@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}{{ event.title }}{% endblock %}
+
+{% block content %}
+  <h1>{{ event.title }}</h1>
+  <p>{{ event.start_at|date:"D j M Y, H:i" }}</p>
+  <p>Venue: {{ event.venue.name }}</p>
+
+  {% if event.is_cancelled %}
+    <p><strong>Cancelled</strong>{% if event.cancellation_note %}: {{ event.cancellation_note }}{% endif %}</p>
+  {% endif %}
+
+  {% if event.description %}
+    <p>{{ event.description }}</p>
+  {% endif %}
+{% endblock %}
