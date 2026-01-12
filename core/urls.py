@@ -21,4 +21,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('oxford/', include('apps.events.oxford.urls', namespace='oxford')),
     path('oxfordshire/west/', include('apps.events.oxfordshire.west.urls', namespace='westoxon')),
+    path('oxfordshire/east/', include('apps.events.oxfordshire.east.urls', namespace='eastoxon')),
 ]
