@@ -81,18 +81,18 @@ class OxfordViewsTestCase(TestCase):
         self.assertNotIn(self.event_private, events)
         self.assertNotIn(self.event_inactive_venue, events)
 
-        def test_past_events_list_shows_only_past_approved_public_active_venue(self):
-            url = reverse("oxford:past_events")
-            resp = self.client.get(url)
-            self.assertEqual(resp.status_code, 200)
+    def test_past_events_list_shows_only_past_approved_public_active_venue(self):
+        url = reverse("oxford:past_events")
+        resp = self.client.get(url)
+        self.assertEqual(resp.status_code, 200)
 
-            events = list(resp.context["events"])
-            self.assertIn(self.event_past_ok, events)
+        events = list(resp.context["events"])
+        self.assertIn(self.event_past_ok, events)
 
-            self.assertNotIn(self.event_upcoming_ok, events)
-            self.assertNotIn(self.event_pending, events)
-            self.assertNotIn(self.event_private, events)
-            self.assertNotIn(self.event_inactive_venue, events)
+        self.assertNotIn(self.event_upcoming_ok, events)
+        self.assertNotIn(self.event_pending, events)
+        self.assertNotIn(self.event_private, events)
+        self.assertNotIn(self.event_inactive_venue, events)
 
     def test_category_view_filters_by_category(self):
         url = reverse("oxford:category_events", kwargs={"category": "open_mic"})
