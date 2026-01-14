@@ -1,11 +1,10 @@
-from django.urls import include, path
+from django.urls import path
+from . import views
 
 app_name = "moderation"
 
 urlpatterns = [
-    path("", include("apps.moderation.dashboard.urls")),
-    path("queue/", include("apps.moderation.queue.urls")),
-    path("decision/", include("apps.moderation.decision_row.urls")),
-    # login later:
-    # path("login/", include("apps.moderation.login.urls")),
+    path("", views.moderation_home, name="home"),
+    path("queue/", views.moderation_queue, name="queue"),
+    path("log/", views.moderation_log, name="log"),
 ]
