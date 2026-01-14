@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}Moderation Dashboard{% endblock %}
+
+{% block content %}
+  <h1>Moderation Dashboard</h1>
+  <p>Wiring works</p>
+
+  <ul>
+    <li><a href="{% url 'moderation:queue:home' %}">Go to Queue</a></li>
+  </ul>
+{% endblock %}
