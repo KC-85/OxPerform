@@ -80,6 +80,9 @@ INSTALLED_APPS = [
     "apps.events.oxfordshire.east.apps.EastOxfordshireConfig",
     "apps.events.oxfordshire.north.apps.NorthOxfordshireConfig",
     "apps.events.oxfordshire.south.apps.SouthOxfordshireConfig",
+
+    # Moderation
+    "apps.moderation",
 ]
 
 SITE_ID = 1
