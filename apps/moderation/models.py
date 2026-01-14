@@ -16,7 +16,7 @@ class Region(models.TextChoices):
     NORTH_OXON = "northoxon", "North Oxfordshire"
     SOUTH_OXON = "southoxon", "South Oxfordshire"
 
-class ModerationAction(models.TextChoies):
+class ModerationAction(models.TextChoices):
     APPROVE = "approve", "Approve"
     REJECT = "reject", "Reject"
     CANCEL = "cancel", "Cancel"
