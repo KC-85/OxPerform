@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, include
 from . import views
 
 app_name = "moderation"
@@ -8,5 +8,8 @@ urlpatterns = [
     path("queue/", views.moderation_queue, name="queue"),
     path("log/", views.moderation_log, name="log"),
 
-    path("decision/", include(("apps.moderation.decision_row.urls", "decision_row"), namespace="decision_row")),
+    path(
+        "decision/",
+        include(("apps.moderation.decision_row.urls", "decision_row"), namespace="decision_row"),
+    ),
 ]
