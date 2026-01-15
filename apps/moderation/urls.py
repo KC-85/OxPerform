@@ -7,4 +7,6 @@ urlpatterns = [
     path("", views.moderation_home, name="home"),
     path("queue/", views.moderation_queue, name="queue"),
     path("log/", views.moderation_log, name="log"),
+
+    path("decision/", include(("apps.moderation.decision_row.urls", "decision_row"), namespace="decision_row")),
 ]
