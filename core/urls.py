@@ -26,4 +26,5 @@ urlpatterns = [
     path('oxfordshire/south/', include('apps.events.oxfordshire.south.urls', namespace='southoxon')),
 
     path("moderation/", include("apps.moderation.urls")),
+    path("decision/", include("apps.moderation.decision_row.urls")),
 ]
