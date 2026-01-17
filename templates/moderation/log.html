@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Moderation log{% endblock %}
+
+{% block content %}
+  <h1>Moderation log</h1>
+
+  {% if logs %}
+    <ul>
+      {% for log in logs %}
+        <li>{{ log.acted_at }} — {{ log.region }}:{{ log.event_id }} — {{ log.action }}{% if log.actor %} by {{ log.actor }}{% endif %}{% if log.note %} — {{ log.note }}{% endif %}</li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No moderation actions yet.</p>
+  {% endif %}
+
+{% endblock %}
