@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+  <header>
+    <h1>Moderation Queue</h1>
+    <p>Pending events across all regions.</p>
+    <p><small>Now: {{ now }}</small></p>
+    <hr>
+  </header>
+
+  {# Flash messages #}
+  {% if messages %}
+    <ul>
+      {% for message in messages %}
+        <li>{{ message }}</li>
+      {% endfor %}
+    </ul>
+    <hr>
+  {% endif %}
+
+  {# Queue list #}
+  {% if items %}
+    <table border="1" cellpadding="6" cellspacing="0" width="100%">
+      <thead>
+        <tr>
+          <th>Region</th>
+          <th>Event</th>
+          <th>Venue</th>
+          <th>Start</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in items %}
+          {% with ev=row.event %}
+          <tr>
+            <td>{{ row.region_label|default:row.region }}</td>
+            <td>
+              <strong>{{ ev.title }}</strong>
+              {% if row.starts_in_past %}
+                <br><small>(starts in past)</small>
+              {% endif %}
+            </td>
+            <td>{{ ev.venue }}</td>
+            <td>{{ ev.start_at }}</td>
+            <td>{{ ev.status }}</td>
+            <td>
+              {# One form per row, uses your ModerationDecisionForm fields #}
+              <form method="post" action="">
+                {% csrf_token %}
+
+                {# Hidden identifiers #}
+                <input type="hidden" name="region" value="{{ row.region }}">
+                <input type="hidden" name="event_id" value="{{ ev.id }}">
+
+                {# Action selector (fallback if you want to keep it super-minimal) #}
+                <select name="action" required>
+                  <option value="">-- action --</option>
+                  <option value="approve">Approve</option>
+                  <option value="reject">Reject</option>
+                  <option value="cancel">Cancel</option>
+                  <option value="uncancel">Un-cancel</option>
+                  <option value="feature">Feature</option>
+                  <option value="unfeature">Un-feature</option>
+                  <option value="hide">Hide</option>
+                  <option value="unhide">Un-hide</option>
+                </select>
+
+                <input type="text" name="note" placeholder="Note (optional)" />
+
+                <button type="submit">Apply</button>
+              </form>
+            </td>
+          </tr>
+          {% endwith %}
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>No pending events 🎉</p>
+  {% endif %}
+
+  <hr>
+
+  <p>
+    <a href="{% url 'moderation:home' %}">Back to moderation home</a>
+    &nbsp;|&nbsp;
+    <a href="{% url 'moderation:log' %}">View moderation log</a>
+  </p>
+{% endblock %}
