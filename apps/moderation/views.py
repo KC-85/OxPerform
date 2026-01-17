@@ -112,24 +112,25 @@ def moderation_home(request: HttpRequest) -> HttpResponse:
 
     def stats_for(region_key: str):
         cfg = REGION_CONFIG[region_key]
+
+        cancelled_count = (
+            cfg.event_model.objects.filter(is_cancelled=True).count()
+            if hasattr(cfg.event_model, "is_cancelled")
+            else 0
+        )
+
         return {
             "pending": cfg.event_model.objects.filter(status=cfg.status_enum.PENDING).count(),
             "approved_upcoming": cfg.event_model.objects.filter(
-                status=cfg.status_enum.APPROVED, start_at__gte=now
+                status=cfg.status_enum.APPROVED,
+                start_at__gte=now,
             ).count(),
-            "cancelled": cfg.event_model.objects.filter(is_cancelled=True).count(),
+            "cancelled": cancelled_count,
         }
 
     stats = {key: stats_for(key) for key in REGION_CONFIG.keys()}
 
-    return render(
-        request,
-        "moderation/home.html",
-        {
-            "stats": stats,
-        },
-    )
-
+    return render(request, "moderation/home.html", {"stats": stats})
 
 @staff_member_required
 @require_http_methods(["GET", "POST"])

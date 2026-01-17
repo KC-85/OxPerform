@@ -123,5 +123,4 @@ def queue_home(request):
         "recent_logs": recent_logs,
         "now": timezone.now(),
     }
-    return render
-        (request, "moderation/queue/home.html", context)
+    return render(request, "moderation/queue/home.html", context)
