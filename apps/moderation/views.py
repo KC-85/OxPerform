@@ -197,7 +197,7 @@ def moderation_queue(request: HttpRequest) -> HttpResponse:
 
     return render(
         request,
-        "moderation/queue.html",
+        "moderation/home.html",
         {
             "items": queue_items,
             "form": form,
