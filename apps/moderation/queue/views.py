@@ -1,62 +1,47 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Optional
 
 from django.contrib.admin.views.decorators import staff_member_required
 from django.db.models import QuerySet
+from django.db.models import Q
 from django.http import Http404
 from django.shortcuts import render
 from django.utils import timezone
 
 from apps.moderation.models import EventModerationLog, Region
+from apps.events.models import Event, EventStatus
 
-# Import region models (each region is its own app/table)
-from apps.events.oxford.models import Event as OxfordEvent, EventStatus as OxfordStatus
-from apps.events.oxfordshire.west.models import Event as WestEvent, EventStatus as WestStatus
-from apps.events.oxfordshire.east.models import Event as EastEvent, EventStatus as EastStatus
-from apps.events.oxfordshire.north.models import Event as NorthEvent, EventStatus as NorthStatus
-from apps.events.oxfordshire.south.models import Event as SouthEvent, EventStatus as SouthStatus
-
-@dataclass(frozen=True)
-class RegionSpec:
-    key: str
-    label: str
-    EventModel: type
-    Status: type
-
-REGIONS: dict[str, RegionSpec] = {
-    Region.OXFORD: RegionSpec(Region.OXFORD, "Oxford", OxfordEvent, OxfordStatus),
-    Region.WEST_OXON: RegionSpec(Region.WEST_OXON, "West Oxfordshire", WestEvent, WestStatus),
-    Region.EAST_OXON: RegionSpec(Region.EAST_OXON, "East Oxfordshire", EastEvent, EastStatus),
-    Region.NORTH_OXON: RegionSpec(Region.NORTH_OXON, "North Oxfordshire", NorthEvent, NorthStatus),
-    Region.SOUTH_OXON: RegionSpec(Region.SOUTH_OXON, "South Oxfordshire", SouthEvent, SouthStatus),
+REGIONS: dict[str, str] = {
+    Region.OXFORD: "Oxford",
+    Region.WEST_OXON: "West Oxfordshire",
+    Region.EAST_OXON: "East Oxfordshire",
+    Region.NORTH_OXON: "North Oxfordshire",
+    Region.SOUTH_OXON: "South Oxfordshire",
 }
 
-def _parse_region(region: Optional[str]) -> Optional[RegionSpec]:
+def _parse_region(region: Optional[str]) -> Optional[str]:
     if not region:
         return None
-    spec = REGIONS.get(region)
-    if not spec:
+    if region not in REGIONS:
         raise Http404("Unknown region")
-    return spec
+    return region
 
-def _pending_events_qs(spec: RegionSpec) -> QuerySet:
+def _pending_events_qs(region_key: str) -> QuerySet:
     """
     Pending items for moderation.
     We don't show non-public or cancelled stuff here unless I later want that.
     """
     return (
-        spec.EventModel.objects.select_related("venue")
-        .filter(status=spec.Status.PENDING)
+        Event.objects.select_related("venue")
+        .filter(region=region_key, status=EventStatus.PENDING)
         .order_by("start_at")
     )
 
 
 def _apply_filters(qs: QuerySet, q: str | None, category: str | None) -> QuerySet:
     if q:
-        # Title/venue name search
-        qs = qs.filter(title__icontains=q) | qs.filter(venue__name__icontains=q)
+        qs = qs.filter(Q(title__icontains=q) | Q(venue__name__icontains=q))
     if category:
         qs = qs.filter(category=category)
     return qs
@@ -73,15 +58,15 @@ def queue_home(request):
     q = (request.GET.get("q") or "").strip() or None
     category = (request.GET.get("category") or "").strip() or None
 
-    selected_spec = _parse_region(region_key)
+    selected_region = _parse_region(region_key)
 
     items: list[dict] = []
     total = 0
 
-    specs = [selected_spec] if selected_spec else list(REGIONS.values())
+    region_keys = [selected_region] if selected_region else list(REGIONS.keys())
 
-    for spec in specs:
-        qs = _pending_events_qs(spec)
+    for key in region_keys:
+        qs = _pending_events_qs(key)
         qs = _apply_filters(qs, q, category)
 
         # Optional: hide events that already have recent moderation logs
@@ -95,8 +80,8 @@ def queue_home(request):
         for e in qs[:200]:
             items.append(
                 {
-                    "region": spec.key,
-                    "region_label": spec.label,
+                    "region": key,
+                    "region_label": REGIONS[key],
                     "id": e.id,
                     "slug": getattr(e, "slug", ""),
                     "title": e.title,
@@ -116,7 +101,7 @@ def queue_home(request):
     context = {
         "items": items,
         "total": total,
-        "regions": [(k, v.label) for k, v in REGIONS.items()],
+        "regions": [(k, label) for k, label in REGIONS.items()],
         "selected_region": region_key or "",
         "q": q or "",
         "category": category or "",

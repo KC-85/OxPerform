@@ -1,62 +1,43 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Any, Optional, Type
-
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.http import Http404, HttpRequest, HttpResponse
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
 from .forms import ModerationDecisionForm
 from .models import EventModerationLog, ModerationAction, Region
-
-# Import each region's Event + EventStatus
-from apps.events.oxford.models import Event as OxfordEvent, EventStatus as OxfordStatus
-from apps.events.oxfordshire.west.models import Event as WestEvent, EventStatus as WestStatus
-from apps.events.oxfordshire.east.models import Event as EastEvent, EventStatus as EastStatus
-from apps.events.oxfordshire.north.models import Event as NorthEvent, EventStatus as NorthStatus
-from apps.events.oxfordshire.south.models import Event as SouthEvent, EventStatus as SouthStatus
+from apps.events.models import Event, EventStatus
 
 
-@dataclass(frozen=True)
-class RegionModelConfig:
-    event_model: Type[Any]
-    status_enum: Type[Any]
-
-
-REGION_CONFIG: dict[str, RegionModelConfig] = {
-    Region.OXFORD: RegionModelConfig(event_model=OxfordEvent, status_enum=OxfordStatus),
-    Region.WEST_OXON: RegionModelConfig(event_model=WestEvent, status_enum=WestStatus),
-    Region.EAST_OXON: RegionModelConfig(event_model=EastEvent, status_enum=EastStatus),
-    Region.NORTH_OXON: RegionModelConfig(event_model=NorthEvent, status_enum=NorthStatus),
-    Region.SOUTH_OXON: RegionModelConfig(event_model=SouthEvent, status_enum=SouthStatus),
+REGION_LABELS: dict[str, str] = {
+    Region.OXFORD: "Oxford",
+    Region.WEST_OXON: "West Oxfordshire",
+    Region.EAST_OXON: "East Oxfordshire",
+    Region.NORTH_OXON: "North Oxfordshire",
+    Region.SOUTH_OXON: "South Oxfordshire",
 }
 
 
 def _get_event(region: str, event_id: int):
-    cfg = REGION_CONFIG.get(region)
-    if not cfg:
+    if region not in REGION_LABELS:
         raise Http404("Unknown region")
-    try:
-        return cfg.event_model.objects.select_related("venue").get(pk=event_id)
-    except cfg.event_model.DoesNotExist:
-        raise Http404("Event not found")
+    return get_object_or_404(Event.objects.select_related("venue"), region=region, pk=event_id)
 
 
-def _apply_action(event, status_enum, action: str, note: str) -> None:
+def _apply_action(event, action: str, note: str) -> None:
     """
     Mutate the event based on action. Keep this small + explicit.
     """
     now = timezone.now()
 
     if action == ModerationAction.APPROVE:
-        event.status = status_enum.APPROVED
+        event.status = EventStatus.APPROVED
 
     elif action == ModerationAction.REJECT:
-        event.status = status_enum.REJECTED
+        event.status = EventStatus.REJECTED
         # Keep your existing review_note field usage
         if hasattr(event, "review_note"):
             event.review_note = note
@@ -69,8 +50,7 @@ def _apply_action(event, status_enum, action: str, note: str) -> None:
             event.cancelled_at = now
         if hasattr(event, "cancellation_note"):
             event.cancellation_note = note
-        # Optional: also set status to CANCELLED if you want that semantic
-        # event.status = status_enum.CANCELLED
+        event.status = EventStatus.CANCELLED
 
     elif action == ModerationAction.UNCANCEL:
         if hasattr(event, "is_cancelled"):
@@ -111,24 +91,17 @@ def moderation_home(request: HttpRequest) -> HttpResponse:
     now = timezone.now()
 
     def stats_for(region_key: str):
-        cfg = REGION_CONFIG[region_key]
-
-        cancelled_count = (
-            cfg.event_model.objects.filter(is_cancelled=True).count()
-            if hasattr(cfg.event_model, "is_cancelled")
-            else 0
-        )
-
         return {
-            "pending": cfg.event_model.objects.filter(status=cfg.status_enum.PENDING).count(),
-            "approved_upcoming": cfg.event_model.objects.filter(
-                status=cfg.status_enum.APPROVED,
+            "pending": Event.objects.filter(region=region_key, status=EventStatus.PENDING).count(),
+            "approved_upcoming": Event.objects.filter(
+                region=region_key,
+                status=EventStatus.APPROVED,
                 start_at__gte=now,
             ).count(),
-            "cancelled": cancelled_count,
+            "cancelled": Event.objects.filter(region=region_key, is_cancelled=True).count(),
         }
 
-    stats = {key: stats_for(key) for key in REGION_CONFIG.keys()}
+    stats = {key: stats_for(key) for key in REGION_LABELS.keys()}
 
     return render(request, "moderation/home.html", {"stats": stats})
 
@@ -147,11 +120,10 @@ def moderation_queue(request: HttpRequest) -> HttpResponse:
             action = form.cleaned_data["action"]
             note = (form.cleaned_data.get("note") or "").strip()
 
-            cfg = REGION_CONFIG[region]
             event = _get_event(region, event_id)
 
             try:
-                _apply_action(event, cfg.status_enum, action, note)
+                _apply_action(event, action, note)
             except Exception as e:
                 messages.error(request, f"Could not apply action: {e}")
                 return redirect("moderation:queue")
@@ -174,11 +146,12 @@ def moderation_queue(request: HttpRequest) -> HttpResponse:
     queue_items = []
     now = timezone.now()
 
-    for region_key, cfg in REGION_CONFIG.items():
+    for region_key, region_label in REGION_LABELS.items():
         qs = (
-            cfg.event_model.objects.select_related("venue")
+            Event.objects.select_related("venue")
             .filter(
-                status=cfg.status_enum.PENDING,
+                region=region_key,
+                status=EventStatus.PENDING,
                 venue__is_active=True,
             )
             .order_by("start_at")
@@ -187,6 +160,7 @@ def moderation_queue(request: HttpRequest) -> HttpResponse:
             queue_items.append(
                 {
                     "region": region_key,
+                    "region_label": region_label,
                     "event": ev,
                     "starts_in_past": ev.start_at < now,
                 }

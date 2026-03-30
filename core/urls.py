@@ -17,16 +17,18 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import include, path
 
+events_urlconf = ("apps.events.urls", "events")
+
 urlpatterns = [
     path('admin/', admin.site.urls),
 
     path("", include(("apps.landing.urls", "landing"), namespace="landing")),
 
-    path('oxford/', include('apps.events.oxford.urls', namespace='oxford')),
-    path('oxfordshire/west/', include('apps.events.oxfordshire.west.urls', namespace='westoxon')),
-    path('oxfordshire/east/', include('apps.events.oxfordshire.east.urls', namespace='eastoxon')),
-    path('oxfordshire/north/', include('apps.events.oxfordshire.north.urls', namespace='northoxon')),
-    path('oxfordshire/south/', include('apps.events.oxfordshire.south.urls', namespace='southoxon')),
+    path("oxford/", include(events_urlconf, namespace="oxford")),
+    path("oxfordshire/west/", include(events_urlconf, namespace="westoxon")),
+    path("oxfordshire/east/", include(events_urlconf, namespace="eastoxon")),
+    path("oxfordshire/north/", include(events_urlconf, namespace="northoxon")),
+    path("oxfordshire/south/", include(events_urlconf, namespace="southoxon")),
 
     path("moderation/", include("apps.moderation.urls")),
     path("decision/", include("apps.moderation.decision_row.urls")),

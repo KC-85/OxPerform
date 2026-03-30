@@ -1,8 +1,5 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Type
-
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.http import Http404, HttpResponseNotAllowed
@@ -10,40 +7,13 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
 from apps.moderation.models import EventModerationLog, Region, ModerationAction
+from apps.events.models import Event, EventStatus
 
 
-@dataclass(frozen=True)
-class RegionBinding:
-    Event: Type
-    EventStatus: Type
-
-
-def _get_region_binding(region: str) -> RegionBinding:
-    """
-    Maps a region slug to its Event model + EventStatus enum.
-    Keep this in ONE place so the rest of your moderation stays clean.
-    """
-    if region == Region.OXFORD:
-        from apps.events.oxford.models import Event, EventStatus
-        return RegionBinding(Event=Event, EventStatus=EventStatus)
-
-    if region == Region.WEST_OXON:
-        from apps.events.oxfordshire.west.models import Event, EventStatus
-        return RegionBinding(Event=Event, EventStatus=EventStatus)
-
-    if region == Region.EAST_OXON:
-        from apps.events.oxfordshire.east.models import Event, EventStatus
-        return RegionBinding(Event=Event, EventStatus=EventStatus)
-
-    if region == Region.NORTH_OXON:
-        from apps.events.oxfordshire.north.models import Event, EventStatus
-        return RegionBinding(Event=Event, EventStatus=EventStatus)
-
-    if region == Region.SOUTH_OXON:
-        from apps.events.oxfordshire.south.models import Event, EventStatus
-        return RegionBinding(Event=Event, EventStatus=EventStatus)
-
-    raise Http404("Unknown region")
+def _validate_region(region: str) -> str:
+    if region not in {choice[0] for choice in Region.choices}:
+        raise Http404("Unknown region")
+    return region
 
 
 def _require_post(request):
@@ -97,12 +67,12 @@ def approve_event(request, region: str, event_id: int):
     if not_allowed:
         return not_allowed
 
-    binding = _get_region_binding(region)
-    event = get_object_or_404(binding.Event, pk=event_id)
+    region = _validate_region(region)
+    event = get_object_or_404(Event, region=region, pk=event_id)
 
     _set_event_fields(
         event,
-        status=binding.EventStatus.APPROVED,
+        status=EventStatus.APPROVED,
         reviewed_by=request.user if hasattr(event, "reviewed_by") else None,
         reviewed_at=timezone.now() if hasattr(event, "reviewed_at") else None,
         review_note=request.POST.get("note", "") if hasattr(event, "review_note") else "",
@@ -119,8 +89,8 @@ def reject_event(request, region: str, event_id: int):
     if not_allowed:
         return not_allowed
 
-    binding = _get_region_binding(region)
-    event = get_object_or_404(binding.Event, pk=event_id)
+    region = _validate_region(region)
+    event = get_object_or_404(Event, region=region, pk=event_id)
 
     note = request.POST.get("note", "")
     if not note:
@@ -129,7 +99,7 @@ def reject_event(request, region: str, event_id: int):
 
     _set_event_fields(
         event,
-        status=binding.EventStatus.REJECTED,
+        status=EventStatus.REJECTED,
         reviewed_by=request.user if hasattr(event, "reviewed_by") else None,
         reviewed_at=timezone.now() if hasattr(event, "reviewed_at") else None,
         review_note=note if hasattr(event, "review_note") else "",
@@ -146,15 +116,15 @@ def cancel_event(request, region: str, event_id: int):
     if not_allowed:
         return not_allowed
 
-    binding = _get_region_binding(region)
-    event = get_object_or_404(binding.Event, pk=event_id)
+    region = _validate_region(region)
+    event = get_object_or_404(Event, region=region, pk=event_id)
 
     note = request.POST.get("note", "")
 
     # Your Event model has is_cancelled/cancelled_at/cancellation_note
     _set_event_fields(
         event,
-        status=binding.EventStatus.CANCELLED if hasattr(binding.EventStatus, "CANCELLED") else event.status,
+        status=EventStatus.CANCELLED,
         is_cancelled=True,
         cancelled_at=timezone.now(),
         cancellation_note=note,
@@ -171,13 +141,13 @@ def uncancel_event(request, region: str, event_id: int):
     if not_allowed:
         return not_allowed
 
-    binding = _get_region_binding(region)
-    event = get_object_or_404(binding.Event, pk=event_id)
+    region = _validate_region(region)
+    event = get_object_or_404(Event, region=region, pk=event_id)
 
     # On uncancel, return to approved (pilot assumption)
     _set_event_fields(
         event,
-        status=binding.EventStatus.APPROVED,
+        status=EventStatus.APPROVED,
         is_cancelled=False,
         cancelled_at=None,
         cancellation_note="",
@@ -194,8 +164,8 @@ def feature_event(request, region: str, event_id: int):
     if not_allowed:
         return not_allowed
 
-    binding = _get_region_binding(region)
-    event = get_object_or_404(binding.Event, pk=event_id)
+    region = _validate_region(region)
+    event = get_object_or_404(Event, region=region, pk=event_id)
 
     _set_event_fields(event, is_featured=True)
 
@@ -210,8 +180,8 @@ def unfeature_event(request, region: str, event_id: int):
     if not_allowed:
         return not_allowed
 
-    binding = _get_region_binding(region)
-    event = get_object_or_404(binding.Event, pk=event_id)
+    region = _validate_region(region)
+    event = get_object_or_404(Event, region=region, pk=event_id)
 
     _set_event_fields(event, is_featured=False)
 
@@ -226,8 +196,8 @@ def hide_event(request, region: str, event_id: int):
     if not_allowed:
         return not_allowed
 
-    binding = _get_region_binding(region)
-    event = get_object_or_404(binding.Event, pk=event_id)
+    region = _validate_region(region)
+    event = get_object_or_404(Event, region=region, pk=event_id)
 
     _set_event_fields(event, is_public=False)
 
@@ -242,8 +212,8 @@ def unhide_event(request, region: str, event_id: int):
     if not_allowed:
         return not_allowed
 
-    binding = _get_region_binding(region)
-    event = get_object_or_404(binding.Event, pk=event_id)
+    region = _validate_region(region)
+    event = get_object_or_404(Event, region=region, pk=event_id)
 
     _set_event_fields(event, is_public=True)
 
